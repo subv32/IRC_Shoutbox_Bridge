@@ -62,9 +62,9 @@ function ircToShoutbox() {
 			fi
 			case "$MESSAGE" in
 				PING*) echo "PONG${MESSAGE#PING}" >> $ircConfig;;
-	    		*QUIT*) ;;
-	    		*PART*) ;;
-	    		*JOIN*) ;;
+				*QUIT*) ;;
+				*PART*) ;;
+				*JOIN*) ;;
 				*KICK*) 
 						channelname=`echo -e "$MESSAGE" | cut -d# -f2 | cut -d' ' -f1`
 						echo "KICKED FROM $channelname attempting rejoin" | tee -a $logfile
@@ -76,12 +76,13 @@ function ircToShoutbox() {
 							if [[ "$MESSAGE" != *"IRC #$supportedChannelToShoutbox||"* ]]; then 
 								text=`echo -e "$MESSAGE" | grep -ioP "PRIVMSG.*$" | cut -d: -f2-`
 								user=`echo -e "$MESSAGE" | cut -d! -f1`
-	    	                	htll && postToChatApi "IRC #$supportedChannelToShoutbox|| $user: $text" 
+								user=`echo -e "$user" | tr -d ":"`
+	    	                	htll && postToChatApi "IRC #$supportedChannelToShoutbox || $user | $text" 
 	    	                	echo "IRC #$channelname | $user: $text" | tee -a $logfile
 	    	                fi
 						fi
 						;;
-	    		*NICK*) ;;
+				*NICK*) ;;
 				*)
 					echo -e "$MESSAGE" | tee -a $logfile;;
 				esac
@@ -102,8 +103,9 @@ function shoutboxToIrc() {
 		user="$1"
 		text="$2"
 		if [[ "$text" != *"HTLL||"* ]] && [[ "$user" != *"HTLL||"* ]] && 
+			[[ "$text" != *"HTLL ||"* ]] && [[ "$user" != *"HTLL||"* ]] && 
 			[ -n "$user" ] && [ -n "$text" ]; then 
-			echo "$supportedChannelToShoutbox: HTLL|| $user $text" > $messagefile
+			echo "$supportedChannelToShoutbox: HTLL|| $user | $text" > $messagefile
 			echo "Attempting USR1 to: $ircToShoutboxPid"
 			kill -USR1 $ircToShoutboxPid
 		fi
